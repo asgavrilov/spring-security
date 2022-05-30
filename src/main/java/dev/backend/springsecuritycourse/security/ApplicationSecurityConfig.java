@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
 
 import static dev.backend.springsecuritycourse.security.ApplicationUserPermission.COURSE_WRITE;
 import static dev.backend.springsecuritycourse.security.ApplicationUserRole.*;
@@ -33,23 +35,19 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         //basic auth
         http
-                .csrf().disable()
+                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*").permitAll() //access without login,available outside
                 .antMatchers("/api/v1/**").hasRole(STUDENT.name()) //role-based auth
-//                .antMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) //permission-based authen
-//                .antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) //permission-based authen
-//                .antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) //permission-based authen
-//                .antMatchers("/management/api/**").hasAnyRole(ADMIN.name(), ADMINTRAINEE.name())
-//                replaced by @Preauthorize annotation
+//               antMatchers have been replaced by @Preauthorize annotation
                 .anyRequest()
                 .authenticated()
                 .and()
                 .httpBasic();
     }
 
-    @Bean
     @Override
+    @Bean
     protected UserDetailsService userDetailsService() {
         UserDetails alexgUser = User.builder().username("annasmith")
                 .password(passwordEncoder.encode("password"))
